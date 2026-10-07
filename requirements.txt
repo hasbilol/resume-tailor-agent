@@ -1,0 +1,9 @@
+# Resume Matchmaker & Tailor Agent — runtime dependencies
+# Tested combination: Python 3.12 + streamlit 1.65 + langgraph 1.2 + langchain-google-genai 4.4
+# Compatible with Python 3.10 - 3.13.
+
+streamlit>=1.46.0,<2.0.0
+langgraph>=1.0.0,<2.0.0
+langchain-core>=1.6.1,<2.0.0
+langchain-google-genai>=4.0.0,<5.0.0
+pydantic>=2.7.4,<3.0.0
