@@ -107,7 +107,7 @@ Then edit `.streamlit/secrets.toml`:
 
 ```toml
 GOOGLE_API_KEY = "AIza...your-key..."
-# GEMINI_MODEL = "gemini-2.5-flash"   # optional override
+# GEMINI_MODEL = "gemini-flash-lite-latest"   # optional override
 ```
 
 **Option B — environment variable:**
@@ -159,19 +159,25 @@ Open <http://localhost:8501>, paste your resume and a JD (or click **Load sample
 | Source | Key | Purpose |
 | --- | --- | --- |
 | Sidebar / secrets / env | `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) | Gemini API credential (**required**) |
-| Sidebar / secrets / env `GEMINI_MODEL` | `GEMINI_MODEL` | Model id (default `gemini-2.5-flash`) |
-| Sidebar | Gemini model picker | `gemini-2.5-flash`, `gemini-2.5-flash-lite`, `gemini-2.0-flash`, or a custom id |
+| Sidebar / secrets / env | `GEMINI_MODEL` | Model id override (default `gemini-flash-lite-latest`) |
+| Sidebar | Gemini model picker | `gemini-flash-lite-latest` (default), `gemini-flash-latest`, `gemini-3.5-flash-lite`, `gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.5-flash`, or a custom id |
 | Sidebar | Drafting temperature | 0.0–1.0 (default 0.3); scoring always runs at temperature 0 |
 
 ---
 
 ## Free-tier behavior (Gemini)
 
-- **~15 requests/minute** — transient 429s are retried up to **4 attempts** with exponential
-  backoff (2 s → 30 s, jittered); every retry is written to the live log stream.
+- **~15 requests/minute + demand spikes** — transient 429s **and 503 "high demand"**
+  outages are retried up to **6 attempts** with exponential backoff (2 s → 30 s, jittered;
+  ~60 s of backoff per call); every retry is written to the live log stream.
 - **Daily quota** — detected and failed fast with a clear message instead of burning retries.
 - **Structured output failure** — falls back to a raw-JSON prompt and re-parses with the same
   `ATSScoringOutput` Pydantic validators (score coercion, skill list cleanup).
+- **Model availability (verified against the API)** — Gemini 2.x ids (`gemini-2.0-flash`,
+  `gemini-2.5-flash`, `gemini-2.5-flash-lite`, `gemini-2.5-pro`) now return
+  **404 “no longer available to new users”** for newly issued keys, and `*-pro-*` models
+  return **429 (no free quota)**. The sidebar only lists flash models confirmed with
+  `generateContent`, and errors surface Google’s suggested replacement when provided.
 - **Bad key / unknown model** — mapped to actionable error messages surfaced in the UI.
 
 ---
@@ -202,7 +208,7 @@ Open <http://localhost:8501>, paste your resume and a JD (or click **Load sample
 
    ```toml
    GOOGLE_API_KEY = "AIza...your-key..."
-   # GEMINI_MODEL = "gemini-2.5-flash"
+   # GEMINI_MODEL = "gemini-flash-lite-latest"
    ```
 
    You can also do this later via **⚙️ Settings → Advanced settings → Secrets** in the
@@ -224,7 +230,7 @@ Open <http://localhost:8501>, paste your resume and a JD (or click **Load sample
 | `Google rejected the API key` | Check for typos; enable the **Generative Language API** for the key's project. |
 | `rate limit` / HTTP 429 after retries | Wait ~1 minute and re-run; the free tier allows roughly 15 requests/minute. |
 | `daily quota is exhausted` | Google AI Studio resets quotas every 24 h; use another key/project in the meantime. |
-| `Model '…' is not available` | Choose another model in the sidebar, or type a valid model id (Custom model ID…). |
+| `Model '…' is not available` (HTTP 404) | Gemini 2.x models are retired for new keys. Pick a verified flash model from the sidebar (`gemini-flash-lite-latest` by default), or use the replacement Google prints in the error (e.g. `gemini-3.8-flash`). |
 | Inputs look stuck / CTA disabled | Both fields need ≥ 40 characters. |
 | App starts but the page is blank | Hard-refresh the browser; check the terminal for tracebacks; confirm `streamlit run app.py` is used. |
 | Cloud deploy fails during install | Keep the version ranges in `requirements.txt`; the app targets Python 3.10–3.13. |

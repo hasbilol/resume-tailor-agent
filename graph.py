@@ -69,21 +69,31 @@ __all__ = [
 # Configuration
 # --------------------------------------------------------------------------- #
 
-DEFAULT_MODEL: str = (os.getenv("GEMINI_MODEL") or "gemini-2.5-flash").strip()
+DEFAULT_MODEL: str = (os.getenv("GEMINI_MODEL") or "gemini-flash-lite-latest").strip()
 DEFAULT_TEMPERATURE: float = 0.3
 
 #: Free-tier friendly models offered in the UI sidebar.
+#: Every id below was smoke-tested against the Gemini API (`models/{id}:generateContent`).
+#: Gemini 2.x models (gemini-2.0/2.5-*) now return 404 for newly issued keys, and the
+#: lite alias is the default because it is dramatically more reliable under free-tier
+#: demand spikes (full-size flash models intermittently return 503 "high demand").
 MODEL_CHOICES: tuple[str, ...] = (
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-2.0-flash",
+    "gemini-flash-lite-latest",
+    "gemini-flash-latest",
+    "gemini-3.5-flash-lite",
+    "gemini-3.8-flash",
+    "gemini-3.7-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
 )
 
 TARGET_ATS_SCORE: int = 80
 MAX_ITERATIONS: int = 3
 
 #: Total LLM attempts per logical call (first try + retries on 429/5xx).
-MAX_ATTEMPTS: int = 4
+#: Gemini free tier intermittently returns 503 "high demand" spikes; the schedule
+#: below (2s, 4s, 8s, 16s, 30s) rides out typical spike windows (~1 min).
+MAX_ATTEMPTS: int = 6
 INITIAL_RETRY_DELAY_SECONDS: float = 2.0
 MAX_RETRY_DELAY_SECONDS: float = 30.0
 LLM_TIMEOUT_SECONDS: float = 120.0
@@ -393,14 +403,27 @@ def _friendly_error(exc: BaseException, model: str, attempts: Optional[int] = No
     ):
         return "Google rejected the API key. Check that it is valid and that the Gemini API is enabled for your project."
     if status == 404 or "is not found" in text or "not found for api key" in text or "model not found" in text:
+        # Google often replies with the exact replacement model, e.g.
+        # "Please update your code to use models/gemini-3.8-flash ..."
+        hint = re.search(
+            r"update your code to use (?:models/)?([a-z0-9][a-z0-9._-]*)",
+            _exception_chain_text(exc),
+            re.IGNORECASE,
+        )
+        suggestion = f" Google suggests '{hint.group(1)}'." if hint else ""
         return (
-            f"Model '{model}' is not available for this API key/project. "
+            f"Model '{model}' is not available for this API key/project.{suggestion} "
             "Pick a different model in the sidebar."
         )
     if is_retryable_error(exc):
         suffix = f" after {attempts} attempts" if attempts else ""
         status = _status_code(exc)
-        reason = f"HTTP {status}" if status else "rate limit / transient error"
+        if status in (500, 502, 503, 504):
+            return (
+                f"Gemini is temporarily overloaded (HTTP {status}){suffix}. "
+                "Demand spikes usually clear within a minute — run the agent again."
+            )
+        reason = f"HTTP {status}" if status else "rate limit"
         return (
             f"Gemini API error ({reason}){suffix}. "
             "Free-tier limits are ~15 requests/minute — wait about a minute, then run again."

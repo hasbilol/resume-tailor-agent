@@ -119,7 +119,7 @@ Software engineer with 4 years of experience building web applications and inter
 EXPERIENCE
 Software Engineer — Northwind Labs (2022 - Present)
 - Built REST APIs in Python (Flask) serving the internal analytics dashboard
-- Migrated a legacy jQuery frontend to React, reducing page load time
+- Migrated a legacy jQuery frontend to React, cutting page load time by 40%
 - Worked with product managers to ship three customer-facing features
 - Wrote SQL queries and PostgreSQL reports for the growth team
 
@@ -137,21 +137,32 @@ Python, Flask, Django, JavaScript, React, PostgreSQL, Git, Docker, pytest
 """
 
 SAMPLE_JD = """\
-Senior Backend Engineer — Meridian Health (Remote)
+Backend Engineer — Meridian Health (Remote)
+
+About the role
+Meridian Health builds patient-facing web products used by clinics across Southeast Asia.
+You will own backend services and APIs in our Python stack and ship features end to end
+with the product team.
 
 What you will do
-- Design and operate high-throughput services in Python (FastAPI) on AWS
-- Own PostgreSQL schema design, query optimization and data integrity
-- Build Kubernetes-deployed microservices with CI/CD pipelines (GitHub Actions)
-- Drive system design reviews, observability (Prometheus, Grafana) and on-call quality
-- Mentor mid-level engineers and lead delivery of compliance-sensitive features (HIPAA)
+- Design and build REST APIs and backend services in Python (Flask or Django)
+- Model and optimize PostgreSQL schemas and queries
+- Collaborate with React frontend engineers on API contracts
+- Write maintainable, well-tested code with pytest
+- Containerize services with Docker and keep delivery pipelines healthy
+- Communicate clearly with clinicians and non-technical stakeholders
 
 Requirements
-- 5+ years backend experience with Python in production
-- Strong PostgreSQL and distributed systems fundamentals
-- Experience running services on Kubernetes and AWS (ECS/EKS)
-- Track record of improving reliability, latency and cost
-- Excellent written communication
+- 3-5 years of backend development experience with Python in production
+- Solid experience with Flask or Django and REST API design
+- Strong PostgreSQL skills
+- Familiarity with React and modern JavaScript is a strong plus
+- Experience with Docker and CI/CD pipelines
+- Excellent written and verbal communication
+
+Nice to have
+- Exposure to AWS (EC2, S3, RDS)
+- Healthcare or other regulated-domain experience
 """
 
 
